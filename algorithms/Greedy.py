@@ -59,7 +59,6 @@ class HEFT:
         # scheduling
         self.system_manager.init_env()
         for t in range(self.num_timeslots):
-            finish_time, ready_time = None, None
             for _, top_rank in enumerate(y[t]):
                 # initialize the earliest finish time of the task
                 earliest_finish_time = np.inf
@@ -67,22 +66,25 @@ class HEFT:
                 for s_id in self.server_lst:
                     if s_id == 0:
                         s_id = self.dataset.partition_device_map[top_rank]
-                    temp_x = x[t,top_rank]
+                    eft_x = x[t,top_rank]
                     x[t,top_rank] = s_id
                     self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
                     if False not in self.system_manager.constraint_chk():
-                        temp_finish_time, temp_ready_time = self.system_manager.get_completion_time_partition(top_rank, deepcopy(finish_time), deepcopy(ready_time))
-                        if temp_finish_time[top_rank] < earliest_finish_time:
-                            earliest_finish_time = temp_finish_time[top_rank]
+                        self.system_manager.get_completion_time_partition(top_rank,timer)
+                        temp_finish_time = self.system_manager.finish_time[top_rank]
+                        if temp_finish_time < earliest_finish_time:
+                            earliest_finish_time = temp_finish_time
                         else:
-                            x[t,top_rank] = temp_x
+                            x[t,top_rank] = eft_x
                     else:
-                        x[t,top_rank] = temp_x
+                        x[t,top_rank] = eft_x
+                
                 self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
-                finish_time, ready_time = self.system_manager.get_completion_time_partition(top_rank, finish_time, ready_time)
+                self.system_manager.get_completion_time_partition(top_rank,timer)
             self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
             # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
-
+        self.system_manager.set_servers_end_time(timer)
+        self.system_manager.print_endtime(self.server_lst)
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
