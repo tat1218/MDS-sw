@@ -56,3 +56,8 @@ Most of the code is written in python, but the high-complexity functions such as
 
 It takes a few seconds for heuristic algorithms, and 1 to 5 minutes for evolutionary algorithms.  
 The results are created in the ./outputs/ folder.  
+
+## workload remain setting example
+4 local server(smart camera), 1 edge server and workload remain and use HEFT scheduling algorithm
+    [0, 0.1, 0.2, 0.03   ,     0.1] (sec)
+>  python3 main.py --workload_remain 0 0.1 0.2 0.03 0.1 --offloading "HEFT"
