@@ -137,7 +137,6 @@ class CPOP:
         # scheduling
         self.system_manager.init_env()
         for t in range(self.num_timeslots):
-            finish_time, ready_time = None, None
             x[t,critical_path] = self.server_lst[-1]
             for _, top_rank in enumerate(y[t]):
                 if top_rank in critical_path:
@@ -149,21 +148,25 @@ class CPOP:
                     for s_id in self.server_lst:
                         if s_id == 0:
                             s_id = self.dataset.partition_device_map[top_rank]
-                        temp_x = x[t,top_rank]
+                        eft_x = x[t,top_rank]
                         x[t,top_rank] = s_id
                         self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
                         if False not in self.system_manager.constraint_chk():
-                            temp_finish_time, temp_ready_time = self.system_manager.get_completion_time_partition(top_rank, deepcopy(finish_time), deepcopy(ready_time))
-                            if temp_finish_time[top_rank] < earliest_finish_time:
-                                earliest_finish_time = temp_finish_time[top_rank]
+                            self.system_manager.get_completion_time_partition(top_rank,timer)
+                            temp_finish_time = self.system_manager.finish_time[top_rank]
+                            if temp_finish_time < earliest_finish_time:
+                                earliest_finish_time = temp_finish_time
                             else:
-                                x[t,top_rank] = temp_x
+                                x[t,top_rank] = eft_x
                         else:
-                            x[t,top_rank] = temp_x
+                            x[t,top_rank] = eft_x
                 self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
-                finish_time, ready_time = self.system_manager.get_completion_time_partition(top_rank, finish_time, ready_time)
+                self.system_manager.get_completion_time_partition(top_rank,timer)
+            self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
             # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
 
+        self.system_manager.set_servers_end_time(timer)
+        self.system_manager.print_endtime(self.server_lst)
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
@@ -198,7 +201,6 @@ class PEFT:
         self.system_manager.init_env()
         for t in range(self.num_timeslots):
             ready_lst = [partition.total_id for partition in self.system_manager.service_set.partitions if len(partition.predecessors) == 0]
-            finish_time, ready_time = None, None
             while len(ready_lst) > 0:
                 top_rank = ready_lst.pop(np.argmax(rank_oct[ready_lst]))
                 # initialize the earliest finish time of the task
@@ -207,26 +209,29 @@ class PEFT:
                 for s_idx, s_id in enumerate(self.server_lst):
                     if s_id == 0:
                         s_id = self.dataset.partition_device_map[top_rank]
-                    temp_x = x[t,top_rank]
+                    eft_x = x[t,top_rank]
                     x[t,top_rank] = s_id
                     self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
                     if False not in self.system_manager.constraint_chk():
-                        temp_finish_time, temp_ready_time = self.system_manager.get_completion_time_partition(top_rank, deepcopy(finish_time), deepcopy(ready_time))
-                        o_eft = temp_finish_time[top_rank] + optimistic_cost_table[top_rank, s_idx]
+                        self.system_manager.get_completion_time_partition(top_rank,timer)
+                        temp_finish_time = self.system_manager.finish_time[top_rank]
+                        o_eft = temp_finish_time + optimistic_cost_table[top_rank, s_idx]
                         if min_o_eft > o_eft:
                             min_o_eft = o_eft
                         else:
-                            x[t,top_rank] = temp_x
+                            x[t,top_rank] = eft_x
                     else:
-                        x[t,top_rank] = temp_x
+                        x[t,top_rank] = eft_x
                 self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
-                finish_time, ready_time = self.system_manager.get_completion_time_partition(top_rank, finish_time, ready_time)
+                self.system_manager.get_completion_time_partition(top_rank,timer)
                 
                 for succ_id in self.system_manager.service_set.partition_successor[top_rank]:
-                    if not 0 in finish_time[self.system_manager.service_set.partition_predecessor[succ_id]]:
+                    if not 0 in self.system_manager.finish_time[self.system_manager.service_set.partition_predecessor[succ_id]]:
                         ready_lst.append(succ_id)
             # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
 
+        self.system_manager.set_servers_end_time(timer)
+        self.system_manager.print_endtime(self.server_lst)
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])

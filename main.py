@@ -62,6 +62,7 @@ if __name__=="__main__":
     parser.add_argument("--partitioning", type=str, choices=["Piecewise", "Layerwise"], default="Layerwise", help="_")
     parser.add_argument("--offloading", type=str, choices=["Local", "Edge", "HEFT", "CPOP", "PEFT", "Greedy", "E_HEFT", "PSOGA", "Genetic", "MemeticPSOGA", "MemeticGenetic", "SAC"], default="Local", help="_")
     parser.add_argument("--iteration", type=int, default=1, help="_")
+    parser.add_argument("--workload_remain", nargs='+',type=float, help="workloads before scheduling")
     args = parser.parse_args()
 
     test_num_services = 1
@@ -72,7 +73,6 @@ if __name__=="__main__":
             net_manager = pickle.load(fp)
         test_dataset = DAGDataSet(num_timeslots=1, num_services=test_num_services, net_manager=net_manager, apply_partition="horizontal", graph_coarsening=True)
     except:
-        print("except")
         os.mkdir("outputs")
         test_dataset = DAGDataSet(num_timeslots=1, num_services=test_num_services, apply_partition="horizontal", graph_coarsening=True)
         with open("outputs/net_manager_backup", "wb") as fp:
@@ -139,6 +139,7 @@ if __name__=="__main__":
         algorithm_parameter = { }
         algorithm.rank = "rank_u"
         dataset.system_manager.scheduling_policy = "rank_u"
+    """
     elif args.partitioning == "Piecewise" and args.offloading == "MemeticPSOGA":
         algorithm = PSOGA(dataset=dataset, num_particles=50, w_max=0.8, w_min=0.2, c1_s=0.9, c1_e=0.2, c2_s=0.4, c2_e=0.9)
         algorithm_parameter = { "loop": 300, "verbose": 100, "local_search": True, "early_exit_loop": 50 }
@@ -178,9 +179,13 @@ if __name__=="__main__":
         dataset.system_manager.scheduling_policy = "rank_u"
     else:
         raise RuntimeError(args.offloading, "is not our algorithm")
+    """
 
     print(":::::::::: D ==", args.num_servers, "::::::::::\n")
     algorithm.server_lst = list(dataset.system_manager.local.keys())[:args.num_servers] + list(dataset.system_manager.edge.keys())
+
+    timer = time.time()
+    dataset.system_manager.init_servers_end_time(algorithm.server_lst, args.workload_remain)
 
     temp = [algorithm.run_algo(**algorithm_parameter) for _ in range(args.iteration)]
     algorithm_x_lst = [x for (x, e, t) in temp]
