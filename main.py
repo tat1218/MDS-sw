@@ -35,7 +35,7 @@ def result(dataset, action_lst, took, algorithm_name):
             # print("#timeslot {} m: {}".format(t, [(s.memory - max(s.deployed_partition_memory.values(), default=0)) / s.memory for s in dataset.system_manager.server.values()]))
             # print("#timeslot {} e: {}".format(t, [s.cur_energy - s.energy_consumption() for s in dataset.system_manager.server.values()]))
             # print("#timeslot {} t: {}".format(t, dataset.system_manager.total_time_dp()))
-            total_time.append(dataset.system_manager.total_time_dp())
+            total_time.append(dataset.system_manager.get_completion_time())
             # print("finish_time", dataset.system_manager.finish_time)
             total_energy.append(sum([s.energy_consumption() for s in list(dataset.system_manager.request.values()) + list(dataset.system_manager.local.values()) + list(dataset.system_manager.edge.values())]))
             total_reward.append(dataset.system_manager.get_reward())

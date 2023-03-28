@@ -2,7 +2,6 @@ import time
 import random
 import math
 import numpy as np
-from copy import deepcopy
 
 import dag_completion_time
 
@@ -220,6 +219,16 @@ class SystemManager():
                 T_tr = self.net_manager.communication(self.service_set.input_data_size[(pred_id,p_id)], self.deployed_server[pred_id], self.deployed_server[p_id])
                 TR_n = max(TF_p + T_tr, TR_n)
             self.ready_time[p_id] = TR_n
+
+    def get_completion_time(self):
+        result = np.zeros(len(self.service_set.services), dtype=np.float_)
+        start = end = 0
+        for svc in self.service_set.services:
+            num_partitions = len(svc.partitions)
+            start = end
+            end += num_partitions
+            result[svc.id] = max(self.finish_time[start:end])
+        return result
 
     def get_completion_time_partition(self, p_id, timer):
         num_partitions = len(self.service_set.partitions)
