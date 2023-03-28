@@ -215,20 +215,10 @@ class SystemManager():
                 if self.finish_time[pred_id] > 0:
                     TF_p = self.finish_time[pred_id]
                 else:
-                    raise RuntimeError("Error: predecessor not finish, #{}".format(p_id, pred_id))
+                    raise RuntimeError("Error: predecessor not finish, #{} {}".format(p_id, pred_id))
                 T_tr = self.net_manager.communication(self.service_set.input_data_size[(pred_id,p_id)], self.deployed_server[pred_id], self.deployed_server[p_id])
                 TR_n = max(TF_p + T_tr, TR_n)
             self.ready_time[p_id] = TR_n
-
-    def get_completion_time(self):
-        result = np.zeros(len(self.service_set.services), dtype=np.float_)
-        start = end = 0
-        for svc in self.service_set.services:
-            num_partitions = len(svc.partitions)
-            start = end
-            end += num_partitions
-            result[svc.id] = max(self.finish_time[start:end])
-        return result
 
     def get_completion_time_partition(self, p_id, timer):
         num_partitions = len(self.service_set.partitions)
@@ -240,12 +230,23 @@ class SystemManager():
         task_ready_time = max(self.ready_time[p_id], max(self.finish_time[np.where(self.deployed_server==self.deployed_server[p_id])]))
         self.finish_time[p_id] = task_ready_time + self.service_set.partitions[p_id].get_computation_time()
 
+    def get_completion_time(self):
+        result = np.zeros(len(self.service_set.services), dtype=np.float_)
+        start = end = 0
+        for svc in self.service_set.services:
+            num_partitions = len(svc.partitions)
+            start = end
+            end += num_partitions
+            result[svc.id] = max(self.finish_time[start:end])
+        return result
+    
     def set_servers_end_time(self,timer):
         for p_id in range(len(self.service_set.partitions)):
             self.server[self.deployed_server[p_id]].set_endtime(timer+self.finish_time[p_id])
 
     def init_servers_end_time(self, server_lst, workloads):
         print("Init workload remain for servers : ",server_lst)
+        print(self.server)
         for i, s_id in enumerate(server_lst):
             self.server[s_id].set_endtime(self.server[s_id].get_endtime() + workloads[i])
             print("workload remain before scheduling for {} : {} sec".format(s_id,workloads[i]))

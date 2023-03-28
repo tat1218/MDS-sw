@@ -7,22 +7,64 @@ from queue import PriorityQueue, Queue
 class Local:
     def __init__(self, dataset):
         self.dataset = dataset
+        self.system_manager = dataset.system_manager
 
     def run_algo(self):
         timer = time.time()
-        x = np.array([[self.dataset.system_manager.net_manager.request_device[p.service.id] for p in self.dataset.svc_set.partitions] for t in range(self.dataset.num_timeslots)])
+        q = []
+        for partition in self.system_manager.service_set.partitions:
+            if len(partition.predecessors) == 0:
+                q.append(partition)
+        x = np.array([[self.system_manager.net_manager.local[p.service.id] for p in self.dataset.svc_set.partitions] for t in range(self.dataset.num_timeslots)])        
+        isvisit = np.zeros(self.system_manager.num_partitions,dtype=bool)
         self.dataset.system_manager.set_env(deployed_server=x[0])
-        return (x, [np.max(self.dataset.system_manager.total_time_dp())], time.time() - timer)
+
+        while len(q) != 0:
+            p_id = q[0].total_id
+            if isvisit[p_id]:
+                q.pop(0)
+                continue
+            try:
+                self.system_manager.get_completion_time_partition(p_id,timer)
+                for succ in q[0].successors:
+                    q.append(succ)
+                isvisit[p_id] = True
+            except:
+                q.append(q[0])
+            q.pop(0)
+        self.system_manager.set_servers_end_time(timer)
+        return (x, [np.max(self.system_manager.total_time_dp())], time.time() - timer)
 
 
 class Edge:
     def __init__(self, dataset):
         self.dataset = dataset
+        self.system_manager = dataset.system_manager
 
     def run_algo(self):
         timer = time.time()
+        q = []
+        for partition in self.system_manager.service_set.partitions:
+            if len(partition.predecessors) == 0:
+                q.append(partition)
         x = np.full(shape=(self.dataset.num_timeslots, self.dataset.num_partitions), fill_value=list(self.dataset.system_manager.edge.keys())[0], dtype=np.int32)
+        isvisit = np.zeros(self.system_manager.num_partitions,dtype=bool)
         self.dataset.system_manager.set_env(deployed_server=x[0])
+
+        while len(q) != 0:
+            p_id = q[0].total_id
+            if isvisit[p_id]:
+                q.pop(0)
+                continue
+            try:
+                self.system_manager.get_completion_time_partition(p_id,timer)
+                for succ in q[0].successors:
+                    q.append(succ)
+                isvisit[p_id] = True
+            except:
+                q.append(q[0])
+            q.pop(0)
+        self.system_manager.set_servers_end_time(timer)
         return (x, [np.max(self.dataset.system_manager.total_time_dp())], time.time() - timer)
 
 
