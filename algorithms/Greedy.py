@@ -15,7 +15,8 @@ class Local:
         for partition in self.system_manager.service_set.partitions:
             if len(partition.predecessors) == 0:
                 q.append(partition)
-        x = np.array([[self.system_manager.net_manager.local[p.service.id] for p in self.dataset.svc_set.partitions] for t in range(self.dataset.num_timeslots)])        
+                
+        x = np.array([[self.system_manager.net_manager.local[p.service.id%(len(self.server_lst)-len(self.system_manager.edge))] for p in self.dataset.svc_set.partitions] for t in range(self.dataset.num_timeslots)])        
         isvisit = np.zeros(self.system_manager.num_partitions,dtype=bool)
         self.dataset.system_manager.set_env(deployed_server=x[0])
 
