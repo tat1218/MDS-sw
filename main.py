@@ -1,8 +1,6 @@
 import numpy as np
 from dag_data_generator import DAGDataSet
-from algorithms.ServerOrderEvolutionary import ServerOrderGenetic, ServerOrderPSOGA
-from algorithms.ServerEvolutionary import Genetic, PSOGA
-from algorithms.Greedy import Local, Edge, HEFT, CPOP, PEFT, Greedy, E_HEFT
+from algorithms.Greedy import Local, Edge, HEFT, CPOP, PEFT, Greedy, E_HEFT, DHS
 from operator import itemgetter
 import time
 import sys
@@ -10,8 +8,6 @@ import draw_result
 import pickle
 import argparse
 import os
-
-
 
 def result(dataset, action_lst, took, algorithm_name):
     print("\033[95m---------- " + algorithm_name + " Test! ----------\033[96m")
@@ -60,7 +56,7 @@ if __name__=="__main__":
     parser.add_argument("--num_servers", type=int, default=2, help="_")
     parser.add_argument("--bandwidth_ratio", type=float, default=1.0, help="_")
     parser.add_argument("--partitioning", type=str, choices=["Piecewise", "Layerwise"], default="Layerwise", help="_")
-    parser.add_argument("--offloading", type=str, choices=["Local", "Edge", "HEFT", "CPOP", "PEFT", "Greedy", "E_HEFT", "PSOGA", "Genetic", "MemeticPSOGA", "MemeticGenetic", "SAC"], default="Local", help="_")
+    parser.add_argument("--offloading", type=str, choices=["Local", "Edge", "HEFT", "CPOP", "PEFT", "Greedy", "E_HEFT", "DHS"], default="Local", help="_")
     parser.add_argument("--iteration", type=int, default=1, help="_")
     parser.add_argument("--workload_remain", nargs='+',type=float, help="workloads before scheduling")
     args = parser.parse_args()
@@ -139,47 +135,11 @@ if __name__=="__main__":
         algorithm_parameter = { }
         algorithm.rank = "rank_u"
         dataset.system_manager.scheduling_policy = "rank_u"
-    """
-    elif args.partitioning == "Piecewise" and args.offloading == "MemeticPSOGA":
-        algorithm = PSOGA(dataset=dataset, num_particles=50, w_max=0.8, w_min=0.2, c1_s=0.9, c1_e=0.2, c2_s=0.4, c2_e=0.9)
-        algorithm_parameter = { "loop": 300, "verbose": 100, "local_search": True, "early_exit_loop": 50 }
+    elif args.offloading == "DHS":
+        algorithm = DHS(dataset=dataset)
+        algorithm_parameter = { }
+        algorithm.rank = "rank_u"
         dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Piecewise" and args.offloading == "MemeticGenetic":
-        algorithm = Genetic(dataset=dataset, num_solutions=50, mutation_ratio=0.1, cross_over_ratio=0.9)
-        algorithm_parameter = { "loop": 300, "verbose": 100, "local_search": True, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Piecewise" and args.offloading == "PSOGA":
-        algorithm = PSOGA(dataset=dataset, num_particles=50, w_max=0.8, w_min=0.2, c1_s=0.9, c1_e=0.2, c2_s=0.4, c2_e=0.9)
-        algorithm_parameter = { "loop": 600, "verbose": 100, "local_search": False, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Piecewise" and args.offloading == "Genetic":
-        algorithm = Genetic(dataset=dataset, num_solutions=50, mutation_ratio=0.1, cross_over_ratio=0.9)
-        algorithm_parameter = { "loop": 600, "verbose": 100, "local_search": False, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Layerwise" and args.offloading == "MemeticPSOGA":
-        algorithm = ServerOrderPSOGA(dataset=dataset, num_particles=50, w_max=0.8, w_min=0.2, c1_s=0.9, c1_e=0.2, c2_s=0.4, c2_e=0.9)
-        algorithm_parameter = { "loop": 300, "verbose": 100, "local_search": True, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Layerwise" and args.offloading == "MemeticGenetic":
-        algorithm = ServerOrderGenetic(dataset=dataset, num_solutions=50, mutation_ratio=0.1, cross_over_ratio=0.9)
-        algorithm_parameter = { "loop": 300, "verbose": 100, "local_search": True, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Layerwise" and args.offloading == "PSOGA":
-        algorithm = ServerOrderPSOGA(dataset=dataset, num_particles=50, w_max=0.8, w_min=0.2, c1_s=0.9, c1_e=0.2, c2_s=0.4, c2_e=0.9)
-        algorithm_parameter = { "loop": 600, "verbose": 100, "local_search": False, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Layerwise" and args.offloading == "Genetic":
-        algorithm = ServerOrderGenetic(dataset=dataset, num_solutions=50, mutation_ratio=0.1, cross_over_ratio=0.9)
-        algorithm_parameter = { "loop": 600, "verbose": 100, "local_search": False, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.partitioning == "Layerwise" and args.offloading == "SAC":
-        from dag_env import DAGEnv
-        algorithm = DAGEnv(dataset, max_episode=1000)
-        algorithm_parameter = { "loop": 600, "verbose": 100, "local_search": False, "early_exit_loop": 50 }
-        dataset.system_manager.scheduling_policy = "rank_u"
-    else:
-        raise RuntimeError(args.offloading, "is not our algorithm")
-    """
 
     print(":::::::::: D ==", args.num_servers, "::::::::::\n")
     algorithm.server_lst = list(dataset.system_manager.local.keys())[:args.num_servers] + list(dataset.system_manager.edge.keys())
