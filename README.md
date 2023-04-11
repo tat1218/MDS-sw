@@ -11,7 +11,6 @@ This repository is based on [https://github.com/yhjh5302/Multiple-DNN-Scheduling
 #### General
 *  python>=3.6
 *  numpy
-*  matplotlib
 
 ## How to run
 #### 1. Build C++ functions
