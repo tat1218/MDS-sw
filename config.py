@@ -111,6 +111,7 @@ service_info = [
     {
         'model_name':'AlexNet',
         'deadline':0.08, # second
+        'workload':16.5,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -320,6 +321,7 @@ service_info = [
     {
         'model_name':'GoogLeNet',
         'deadline':0.08, # second
+        'workload':29.26,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -1787,6 +1789,7 @@ service_info = [
     {
         'model_name':'ResNet-50',
         'deadline':0.08, # second
+        'workload':17.92,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -2855,6 +2858,7 @@ service_info = [
     {
         'model_name':'AlexNet',
         'deadline':0.08, # second
+        'workload':16.5,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -3064,6 +3068,7 @@ service_info = [
     {
         'model_name':'GoogLeNet',
         'deadline':0.08, # second
+        'workload':29.26,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -4531,6 +4536,7 @@ service_info = [
     {
         'model_name':'ResNet-50',
         'deadline':0.08, # second
+        'workload':17.92,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -5599,6 +5605,7 @@ service_info = [
     {
         'model_name':'AlexNet',
         'deadline':0.08, # second
+        'workload':16.5,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -5808,6 +5815,7 @@ service_info = [
     {
         'model_name':'GoogLeNet',
         'deadline':0.08, # second
+        'workload':29.26,
         'layers':[
             {
                 'layer_name':'conv1',
@@ -7275,6 +7283,7 @@ service_info = [
     {
         'model_name':'ResNet-50',
         'deadline':0.08, # second
+        'workload':17.92,
         'layers':[
             {
                 'layer_name':'conv1',

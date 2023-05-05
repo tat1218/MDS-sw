@@ -131,7 +131,6 @@ class HEFT:
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
-        self.system_manager.print_endtime(self.server_lst)
         return ((x, y), [np.max(self.system_manager.total_time_dp())], time.time() - timer)
 
 
@@ -493,68 +492,3 @@ class E_HEFT:
 
     def calc_rank_b_on_d(self,server_lst):    # pl rank of b for E_HEFT
         self.rank_b_on_d = np.zeros(shape=(self.system_manager.num_servers, self.system_manager.num_partitions))
-
-class DHS:          ## not implemented
-    def __init__(self, dataset):
-        self.dataset = dataset
-        self.system_manager = dataset.system_manager
-        self.num_servers = dataset.num_servers
-        self.num_timeslots = dataset.num_timeslots
-        self.num_partitions = len(self.dataset.svc_set.partitions)
-
-        self.rank = 'rank_u'
-        self.server_lst = list(self.system_manager.local.keys()) + list(self.system_manager.edge.keys())
-
-    def run_algo(self):
-        timer = time.time()
-        # calculate rank
-        if self.rank == 'rank_u':
-            self.system_manager.rank_u = np.zeros(self.num_partitions)
-            for partition in self.system_manager.service_set.partitions:
-                if len(partition.predecessors) == 0:
-                    self.system_manager.calc_rank_u_total_average(partition)
-            x = np.full(shape=(self.num_timeslots, self.num_partitions), fill_value=self.system_manager.cloud_id, dtype=np.int32)
-            y = np.array([np.array(sorted(zip(self.system_manager.rank_u, np.arange(self.num_partitions)), reverse=True), dtype=np.int32)[:,1] for _ in range(self.num_timeslots)])
-
-        elif self.rank == 'rank_d':
-            self.system_manager.rank_d = np.zeros(self.num_partitions)
-            for partition in self.system_manager.service_set.partitions:
-                if len(partition.successors) == 0:
-                    self.system_manager.calc_rank_d_total_average(partition)
-            x = np.full(shape=(self.num_timeslots, self.num_partitions), fill_value=self.system_manager.cloud_id, dtype=np.int32)
-            y = np.array([np.array(sorted(zip(self.system_manager.rank_d, np.arange(self.num_partitions)), reverse=False), dtype=np.int32)[:,1] for _ in range(self.num_timeslots)])
-
-        # scheduling
-        self.system_manager.init_env()
-        for t in range(self.num_timeslots):
-            for _, top_rank in enumerate(y[t]):
-                # initialize the earliest finish time of the task
-                earliest_finish_time = np.inf
-                # for all available server, find earliest finish time server
-                for s_id in self.server_lst:
-                    if s_id == 0:
-                        s_id = self.dataset.partition_device_map[top_rank]
-                    eft_x = x[t,top_rank]
-                    x[t,top_rank] = s_id
-                    self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
-                    if False not in self.system_manager.constraint_chk():
-                        self.system_manager.get_completion_time_partition(top_rank,timer)
-                        temp_finish_time = self.system_manager.finish_time[top_rank]
-                        if temp_finish_time < earliest_finish_time:
-                            earliest_finish_time = temp_finish_time
-                        else:
-                            x[t,top_rank] = eft_x
-                    else:
-                        x[t,top_rank] = eft_x
-                
-                self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
-                self.system_manager.get_completion_time_partition(top_rank,timer)
-            self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
-            # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
-        self.system_manager.set_servers_end_time(timer)
-        self.system_manager.print_endtime(self.server_lst)
-        x = np.array(x, dtype=np.int32)
-        y = np.array(y, dtype=np.int32)
-        self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
-        self.system_manager.print_endtime(self.server_lst)
-        return ((x, y), [np.max(self.system_manager.total_time_dp())], time.time() - timer)

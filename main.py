@@ -1,7 +1,8 @@
 import numpy as np
 from dag_data_generator import DAGDataSet
-from algorithms.Greedy import Local, Edge, HEFT, CPOP, PEFT, Greedy, E_HEFT, DHS
+from algorithms.Greedy import Local, Edge, HEFT, CPOP, PEFT, Greedy, E_HEFT
 from operator import itemgetter
+from config import service_info
 import time
 import sys
 import draw_result
@@ -60,6 +61,20 @@ if __name__=="__main__":
     parser.add_argument("--iteration", type=int, default=1, help="_")
     parser.add_argument("--workload_remain", nargs='+',type=float, help="workloads before scheduling")
     args = parser.parse_args()
+
+    if args.offloading == "DHS":
+        workload_sum = 0
+        for i in range(args.num_services):
+            workload_sum += service_info[i]['workload']
+        workload_std = np.array(args.workload_remain).std()
+
+        if workload_sum > 70:
+            args.offloading = "PEFT"
+        else:
+            if workload_std > 0.3:
+                args.offloading = "CPOP"
+            else:
+                args.offloading = "HEFT"
 
     test_num_services = 1
     test_num_servers = 10
