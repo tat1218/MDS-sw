@@ -245,10 +245,10 @@ class SystemManager():
             self.server[self.deployed_server[p_id]].set_endtime(timer+self.finish_time[p_id])
 
     def init_servers_end_time(self, server_lst, workloads):
-        print("Init workload remain for servers : ",server_lst)
+        #print("Init workload remain for servers : ",server_lst)
         for i, s_id in enumerate(server_lst):
             self.server[s_id].set_endtime(self.server[s_id].get_endtime() + workloads[i])
-            print("workload remain before scheduling for {} : {} sec".format(s_id,workloads[i]))
+        #    print("workload remain before scheduling for {} : {} sec".format(s_id,workloads[i]))
         
     ## for debug
     def print_endtime(self, server_lst):

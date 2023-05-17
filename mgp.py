@@ -79,10 +79,10 @@ class MultilevelGraphPartitioning:
 
             gain_priority_queue.sort(key=lambda x: x[0])
         #### testout
-        print(len(np.unique(graph)))
+        #print(len(np.unique(graph)))
         # print(coarsened, graph)
         lst = [(graph[id], self.system_manager.service_set.services[svc_id].partitions[id].layer_name) for id in range(graph_size)]
-        print([[item[1] for item in items] for key, items in groupby(sorted(lst, key=lambda x: x[0]), lambda x: x[0])])
+        #print([[item[1] for item in items] for key, items in groupby(sorted(lst, key=lambda x: x[0]), lambda x: x[0])])
         input()
         return graph, tran_time
 
@@ -264,7 +264,7 @@ class MultilevelGraphPartitioning:
             # lst = [(graph[id], self.system_manager.service_set.services[svc_id].partitions[id].layer_name) for id in range(graph_size)]
             # print([[item[1] for item in items] for key, items in groupby(sorted(lst, key=lambda x: x[0]), lambda x: x[0])])
             # input()
-            print(len(np.unique(graph)), theta)
+            #print(len(np.unique(graph)), theta)
             new_coarsened_graph.append(graph)
         return new_coarsened_graph
 

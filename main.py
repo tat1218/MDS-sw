@@ -11,7 +11,7 @@ import argparse
 import os
 
 def result(dataset, action_lst, took, algorithm_name):
-    print("\033[95m---------- " + algorithm_name + " Test! ----------\033[96m")
+    #print("\033[95m---------- " + algorithm_name + " Test! ----------\033[96m")
     result = []
     for idx, action in enumerate(action_lst):
         total_time = []
@@ -26,9 +26,9 @@ def result(dataset, action_lst, took, algorithm_name):
             else:
                 x = np.array(action[t])
                 dataset.system_manager.set_env(deployed_server=x)
-            print("#timeslot {} x: {}".format(t, dataset.system_manager.deployed_server))
+            #print("#timeslot {} x: {}".format(t, dataset.system_manager.deployed_server))
             # print("#timeslot {} y: {}".format(t, dataset.system_manager.execution_order))
-            print("#timeslot {} constraint: {}".format(t, [s.constraint_chk() for s in dataset.system_manager.server.values()]))
+            #print("#timeslot {} constraint: {}".format(t, [s.constraint_chk() for s in dataset.system_manager.server.values()]))
             # print("#timeslot {} m: {}".format(t, [(s.memory - max(s.deployed_partition_memory.values(), default=0)) / s.memory for s in dataset.system_manager.server.values()]))
             # print("#timeslot {} e: {}".format(t, [s.cur_energy - s.energy_consumption() for s in dataset.system_manager.server.values()]))
             # print("#timeslot {} t: {}".format(t, dataset.system_manager.total_time_dp()))
@@ -37,19 +37,20 @@ def result(dataset, action_lst, took, algorithm_name):
             total_energy.append(sum([s.energy_consumption() for s in list(dataset.system_manager.request.values()) + list(dataset.system_manager.local.values()) + list(dataset.system_manager.edge.values())]))
             total_reward.append(dataset.system_manager.get_reward())
             dataset.system_manager.after_timeslot(deployed_server=x, timeslot=t)
-        print("mean t: {:.5f}".format(np.max(total_time, axis=None)), np.max(np.array(total_time), axis=0))
-        print("mean e: {:.5f}".format(sum(total_energy) / dataset.num_timeslots))
-        print("mean r: {:.5f}".format(sum(total_reward) / dataset.num_timeslots))
-        print("took: {:.5f} sec".format(took[idx]))
+        print("{:.5f}".format(np.max(total_time, axis=None)))
+        #print("mean t: {:.5f}".format(np.max(total_time, axis=None)), np.max(np.array(total_time), axis=0))
+        #print("mean e: {:.5f}".format(sum(total_energy) / dataset.num_timeslots))
+        #print("mean r: {:.5f}".format(sum(total_reward) / dataset.num_timeslots))
+        #print("took: {:.5f} sec".format(took[idx]))
         result.append([np.max(total_time, axis=None), sum(total_energy) / dataset.num_timeslots, sum(total_reward) / dataset.num_timeslots])
-    print("\033[95m---------- " + algorithm_name + " Done! ----------\033[0m\n")
+    #print("\033[95m---------- " + algorithm_name + " Done! ----------\033[0m\n")
     return result
 
 
 
 if __name__=="__main__":
     # for DAG recursive functions
-    print("recursion limit", sys.getrecursionlimit())
+    #print("recursion limit", sys.getrecursionlimit())
     sys.setrecursionlimit(10000)
 
     parser = argparse.ArgumentParser(description="_")
@@ -60,21 +61,42 @@ if __name__=="__main__":
     parser.add_argument("--offloading", type=str, choices=["Local", "Edge", "HEFT", "CPOP", "PEFT", "Greedy", "E_HEFT", "DHS"], default="Local", help="_")
     parser.add_argument("--iteration", type=int, default=1, help="_")
     parser.add_argument("--workload_remain", nargs='+',type=float, help="workloads before scheduling")
+    parser.add_argument("--mu", type=float, default=0)
+    parser.add_argument("--sig", type=float, default=0)
+    parser.add_argument("--random_test", type=bool, default=False)
     args = parser.parse_args()
+
+    if args.random_test:
+        args.num_services = np.random.randint(3,8)
+        wr = np.random.uniform(0,0.5,size=1+args.num_servers)
+        for w in wr:
+            print("{:.5f}".format(w),end=' ')
+        print()
+        print(args.num_services)
+    else:
+        if args.workload_remain == None:
+            wr = np.random.normal(args.mu,args.sig,size=1+args.num_servers)
+            for i in range(len(wr)):
+                if wr[i] < 0:
+                    wr[i] = 0
+            #print(args.mu, args.sig, wr)
+        else:
+            wr = args.workload_remain
 
     if args.offloading == "DHS":
         workload_sum = 0
         for i in range(args.num_services):
             workload_sum += service_info[i]['workload']
-        workload_std = np.array(args.workload_remain).std()
+        workload_std = np.array(wr).std()
+        print(workload_sum, workload_std)
 
-        if workload_sum > 70:
+        if workload_sum > 115:
             args.offloading = "PEFT"
         else:
-            if workload_std > 0.3:
-                args.offloading = "CPOP"
-            else:
+            if workload_std > 0.12:
                 args.offloading = "HEFT"
+            else:
+                args.offloading = "CPOP"
 
     test_num_services = 1
     test_num_servers = 10
@@ -89,9 +111,9 @@ if __name__=="__main__":
         with open("outputs/net_manager_backup", "wb") as fp:
             pickle.dump(test_dataset.system_manager.net_manager, fp)
 
-    print("\n========== {}-{} Scheme Start ==========\n".format(args.partitioning, args.offloading))
+    #print("\n========== {}-{} Scheme Start ==========\n".format(args.partitioning, args.offloading))
 
-    print(":::::::::: N ==", args.num_services, "::::::::::\n")
+    #print(":::::::::: N ==", args.num_services, "::::::::::\n")
 
     algorithm_result = []
     algorithm_took_lst = []
@@ -107,14 +129,14 @@ if __name__=="__main__":
     dataset.system_manager.net_manager.bandwidth_change(args.bandwidth_ratio)
 
     dataset.system_manager.set_env(deployed_server=np.full(shape=dataset.num_partitions, fill_value=list(dataset.system_manager.request.keys())[0], dtype=np.int32))
-    print("Raspberry Pi computation time", [sum([p.get_computation_time() for p in svc.partitions]) for svc in dataset.svc_set.services])
-    print("Raspberry Pi computing capacity", [sum([p.workload_size * p.deployed_server.computing_intensity[p.service.id] for p in svc.partitions]) for svc in dataset.svc_set.services], "\n")
+    #print("Raspberry Pi computation time", [sum([p.get_computation_time() for p in svc.partitions]) for svc in dataset.svc_set.services])
+    #print("Raspberry Pi computing capacity", [sum([p.workload_size * p.deployed_server.computing_intensity[p.service.id] for p in svc.partitions]) for svc in dataset.svc_set.services], "\n")
     dataset.system_manager.set_env(deployed_server=np.full(shape=dataset.num_partitions, fill_value=list(dataset.system_manager.local.keys())[1], dtype=np.int32))
-    print("Jetson TX2 computation time", [sum([p.get_computation_time() for p in svc.partitions]) for svc in dataset.svc_set.services])
-    print("Jetson TX2 computing capacity", [sum([p.workload_size * p.deployed_server.computing_intensity[p.service.id] for p in svc.partitions]) for svc in dataset.svc_set.services], "\n")
+    #print("Jetson TX2 computation time", [sum([p.get_computation_time() for p in svc.partitions]) for svc in dataset.svc_set.services])
+    #print("Jetson TX2 computing capacity", [sum([p.workload_size * p.deployed_server.computing_intensity[p.service.id] for p in svc.partitions]) for svc in dataset.svc_set.services], "\n")
     dataset.system_manager.set_env(deployed_server=np.full(shape=dataset.num_partitions, fill_value=list(dataset.system_manager.edge.keys())[0], dtype=np.int32))
-    print("Edge computation time", [sum([p.get_computation_time() for p in svc.partitions]) for svc in dataset.svc_set.services])
-    print("Edge computing capacity", [sum([p.workload_size * p.deployed_server.computing_intensity[p.service.id] for p in svc.partitions]) for svc in dataset.svc_set.services], "\n")
+    #print("Edge computation time", [sum([p.get_computation_time() for p in svc.partitions]) for svc in dataset.svc_set.services])
+    #print("Edge computing capacity", [sum([p.workload_size * p.deployed_server.computing_intensity[p.service.id] for p in svc.partitions]) for svc in dataset.svc_set.services], "\n")
 
     if args.offloading == "Local":
         algorithm = Local(dataset=dataset)
@@ -150,17 +172,17 @@ if __name__=="__main__":
         algorithm_parameter = { }
         algorithm.rank = "rank_u"
         dataset.system_manager.scheduling_policy = "rank_u"
-    elif args.offloading == "DHS":
-        algorithm = DHS(dataset=dataset)
-        algorithm_parameter = { }
-        algorithm.rank = "rank_u"
-        dataset.system_manager.scheduling_policy = "rank_u"
+    #elif args.offloading == "DHS":
+    #    algorithm = DHS(args.workload_remain, dataset=dataset)
+    #    algorithm_parameter = { }
+    #    algorithm.rank = "rank_u"
+    #    dataset.system_manager.scheduling_policy = "rank_u"
 
-    print(":::::::::: D ==", args.num_servers, "::::::::::\n")
+    #print(":::::::::: D ==", args.num_servers, "::::::::::\n")
     algorithm.server_lst = list(dataset.system_manager.local.keys())[:args.num_servers] + list(dataset.system_manager.edge.keys())
 
     timer = time.time()
-    dataset.system_manager.init_servers_end_time(algorithm.server_lst, args.workload_remain)
+    dataset.system_manager.init_servers_end_time(algorithm.server_lst, wr)
 
     temp = [algorithm.run_algo(**algorithm_parameter) for _ in range(args.iteration)]
     algorithm_x_lst = [x for (x, e, t) in temp]

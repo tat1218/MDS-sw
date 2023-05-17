@@ -127,7 +127,7 @@ class HEFT:
             self.system_manager.set_env(deployed_server=x[t], execution_order=y[t])
             # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
         self.system_manager.set_servers_end_time(timer)
-        self.system_manager.print_endtime(self.server_lst)
+        #self.system_manager.print_endtime(self.server_lst)
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
@@ -209,7 +209,7 @@ class CPOP:
             # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
 
         self.system_manager.set_servers_end_time(timer)
-        self.system_manager.print_endtime(self.server_lst)
+        #self.system_manager.print_endtime(self.server_lst)
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
@@ -274,7 +274,7 @@ class PEFT:
             # self.system_manager.after_timeslot(deployed_server=x[t], execution_order=y[t], timeslot=t)
 
         self.system_manager.set_servers_end_time(timer)
-        self.system_manager.print_endtime(self.server_lst)
+        #self.system_manager.print_endtime(self.server_lst)
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
@@ -471,12 +471,6 @@ class E_HEFT:
         
         x = np.array(x, dtype=np.int32)
         y = np.array(y, dtype=np.int32)
-        print(self.q_max)
-        print(np.sum(x==19))
-        print(np.sum(x==10))
-        print(np.sum(x==11))
-        print(x)
-        print(y)
         self.system_manager.set_env(deployed_server=x[0], execution_order=y[0])
         
         return ((x, y), [np.max(self.system_manager.total_time_dp())], time.time() - timer)
